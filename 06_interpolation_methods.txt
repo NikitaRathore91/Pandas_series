@@ -1,0 +1,283 @@
+| Method                   | Description                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `'linear'`               | **Default.** Linear interpolation between points.                             |
+| `'time'`                 | Works on time-series data. Interpolates values according to datetime index.   |
+| `'index'`                | Similar to linear but uses the index values as the x-axis.                    |
+| `'values'`               | Similar to `index`, but uses actual values passed as x (requires `x=` param). |
+| `'pad'` / `'ffill'`      | Propagate last valid value forward.                                           |
+| `'backfill'` / `'bfill'` | Use next valid value to fill.                                                 |
+| `'polynomial'`           | Fits a polynomial of a specified `order` across the data.                     |
+| `'spline'`               | Uses scipy’s spline interpolation (requires `order`).                         |
+| `'barycentric'`          | Barycentric interpolation (from SciPy).                                       |
+| `'pchip'`                | Piecewise Cubic Hermite Interpolating Polynomial (monotonic).                 |
+| `'akima'`                | Akima 1D interpolation (smooth, edge-friendly).                               |
+| `'cubicspline'`          | Cubic spline interpolation (SciPy ≥ 1.10).                                    |
+| `'from_derivatives'`     | Use known function values and derivatives to interpolate (advanced use).      |
+| `'nearest'`              | Nearest neighbor interpolation.                                               |
+| `'zero'`                 | Step function — interpolates using previous value (like floor). 
+
+Absolutely! Here's a detailed breakdown of all the **pandas interpolation methods**, with **examples** and **when to use each**.
+
+---
+
+### 🧱 Setup for Examples
+
+We'll use this simple DataFrame:
+
+```python
+import pandas as pd
+import numpy as np
+
+data = {
+    "value": [10, np.nan, np.nan, 40, 50]
+}
+df = pd.DataFrame(data)
+print(df)
+```
+
+This gives:
+
+```
+   value
+0   10.0
+1    NaN
+2    NaN
+3   40.0
+4   50.0
+```
+
+---
+
+## 🔧 1. `method='linear'` *(default)*
+
+Interpolates in a **straight line** between known points.
+
+```python
+df.interpolate(method='linear')
+```
+
+**Result:**
+
+```
+   value
+0   10.0
+1   20.0
+2   30.0
+3   40.0
+4   50.0
+```
+
+---
+
+## 🕒 2. `method='time'`
+
+For **time series** data — requires `DatetimeIndex`.
+
+```python
+df['date'] = pd.date_range(start='2024-01-01', periods=5)
+df.set_index('date', inplace=True)
+df.interpolate(method='time')
+```
+
+**Estimates based on time distances.**
+
+---
+
+## 🔢 3. `method='index'`
+
+Same as `'linear'`, but uses index values to interpolate.
+
+```python
+df.interpolate(method='index')
+```
+
+Useful if your index is not sequential (e.g., 0, 2, 5...).
+
+---
+
+## 🔂 4. `method='pad'` / `'ffill'`
+
+**Forward fill**: fills NaN with last known value.
+
+```python
+df.interpolate(method='pad')
+# or
+df.ffill()
+```
+
+**Result:**
+
+```
+   value
+0   10.0
+1   10.0
+2   10.0
+3   40.0
+4   50.0
+```
+
+---
+
+## 🔁 5. `method='backfill'` / `'bfill'`
+
+**Backward fill**: fills NaN with next known value.
+
+```python
+df.interpolate(method='backfill')
+# or
+df.bfill()
+```
+
+**Result:**
+
+```
+   value
+0   10.0
+1   40.0
+2   40.0
+3   40.0
+4   50.0
+```
+
+---
+
+## 🧮 6. `method='polynomial'`
+
+Fills using a **polynomial curve**. Requires `order`.
+
+```python
+df.interpolate(method='polynomial', order=2)
+```
+
+Fits a quadratic curve (order=2) to estimate values.
+
+> ⚠ Requires `scipy`
+
+---
+
+## 🌀 7. `method='spline'`
+
+Smooth interpolation with **splines**. Also requires `order`.
+
+```python
+df.interpolate(method='spline', order=2)
+```
+
+> Best when data is **smooth and curved**.
+
+---
+
+## 📍 8. `method='barycentric'`
+
+Mathematical interpolation based on **barycentric Lagrange formula**.
+
+```python
+df.interpolate(method='barycentric')
+```
+
+> More accurate for polynomial-like data. Requires `scipy`.
+
+---
+
+## 🎢 9. `method='pchip'`
+
+**Monotonic interpolation** — preserves shape and prevents overshooting.
+
+```python
+df.interpolate(method='pchip')
+```
+
+> Good for financial or sensor data.
+
+---
+
+## 📈 10. `method='akima'`
+
+**Akima spline** – smooth and stable near sharp changes.
+
+```python
+df.interpolate(method='akima')
+```
+
+> Smooth alternative to `spline`. Best near edges. Requires `scipy`.
+
+---
+
+## 🧊 11. `method='cubicspline'`
+
+Pure **cubic spline** interpolation.
+
+```python
+df.interpolate(method='cubicspline')
+```
+
+> Introduced in **pandas 2.0+**, requires SciPy ≥ 1.10.
+
+---
+
+## ⚙️ 12. `method='from_derivatives'`
+
+Custom method using known **derivatives and values**.
+
+```python
+# Used internally or with extra data
+```
+
+> Advanced use case — often not needed unless you’re fitting specific physical models.
+
+---
+
+## 🎯 13. `method='nearest'`
+
+Fills NaN using **nearest neighbor** (whichever known value is closest).
+
+```python
+df.interpolate(method='nearest')
+```
+
+**Result:**
+
+```
+   value
+0   10.0
+1   10.0
+2   40.0
+3   40.0
+4   50.0
+```
+
+---
+
+## 🪜 14. `method='zero'`
+
+Step function — replaces NaN with the last value's exact number (like floor rounding).
+
+```python
+df.interpolate(method='zero')
+```
+
+---
+
+## 🔚 Summary Table
+
+| Method             | Type             | Best For                           |
+| ------------------ | ---------------- | ---------------------------------- |
+| `linear`           | Straight line    | General use                        |
+| `time`             | Time-weighted    | Time series                        |
+| `index`            | Index-based      | Uneven index steps                 |
+| `pad` / `ffill`    | Fill forward     | Data continuity                    |
+| `backfill`         | Fill backward    | Leading nulls                      |
+| `polynomial`       | Curve fitting    | Curved data                        |
+| `spline`           | Smooth fit       | Smooth signals                     |
+| `barycentric`      | Math-heavy       | High-accuracy polynomial estimates |
+| `pchip`            | Shape-preserving | Monotonic, sensor/finance data     |
+| `akima`            | Smooth & stable  | Edge-heavy data                    |
+| `cubicspline`      | Cubic smoothness | Clean, smooth curves               |
+| `from_derivatives` | Custom           | Physics, calculus models           |
+| `nearest`          | Nearest point    | Categorical or noisy signals       |
+| `zero`             | Step-wise        | Discrete processes                 |
+
+---
+
+Let me know which one you'd like visualized or tried on your real data!
+
